@@ -4,6 +4,10 @@ import utils.Types;
 import players.rhea.utils.Constants;
 import players.mcts.MCTSPlayer;
 import players.mcts.MCTSParams;
+
+import players.mctsr.MCTSParamsR;
+import players.mctsr.MCTSPlayerR;
+
 import players.rhea.RHEAPlayer;
 import players.rhea.utils.RHEAParams;
 
@@ -37,7 +41,7 @@ public class Test {
         RHEAParams rheaParams = new RHEAParams();
         rheaParams.heurisic_type = Constants.CUSTOM_HEURISTIC;
 
-        players.add(new MCTSPlayer(seed, playerID++, mctsParams));
+        players.add(new MCTSPlayerR(seed, playerID++, new MCTSParamsR()));
         //players.add(new MCTSPlayer(seed, playerID++, mctsParams));
 
 //        players.add(new SimplePlayer(seed, playerID++));
@@ -49,7 +53,6 @@ public class Test {
         // Make sure we have exactly NUM_PLAYERS players
         assert players.size() == Types.NUM_PLAYERS : "There should be " + Types.NUM_PLAYERS +
                 " added to the game, but there are " + players.size();
-
 
         //Assign players and run the game.
         game.setPlayers(players);
