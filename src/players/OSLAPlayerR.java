@@ -18,7 +18,7 @@ import static utils.Utils.*;
 public class OSLAPlayerR extends Player {
     private Random random;
     private boolean rndOpponentModel;
-    public double epsilon = 0; //1e-6;
+    public double epsilon = 1e-6; // Setting to 0 makes it like DoNothing, otherwise makes it place bombs frequently
     private StateHeuristic rootStateHeuristic;
 
     private ArrayList<Vector2d> recentlyVisitedPositions;
