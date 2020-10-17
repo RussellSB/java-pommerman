@@ -109,7 +109,7 @@ public class GameState {
      * Gets the agents of the game
      * @return the agents of the game
      */
-    GameObject[] getAgents() {
+    public GameObject[] getAgents() {
         return model.getAgents();
     }
 
