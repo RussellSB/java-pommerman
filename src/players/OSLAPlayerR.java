@@ -108,7 +108,7 @@ public class OSLAPlayerR extends Player {
                     int ammo = random.nextInt(3) + 1; // range 1-3
                     int blastStrength = random.nextInt(3) + 1; // range 1-3
 
-                    gsCopy.setAgent(i, position.x, position.y, gs.canKick(), gs.getAmmo(), gs.getBlastStrength());
+                    gsCopy.setAgent(i, position.x, position.y, canKick, ammo, blastStrength);
                     Types.ACTIONS simpleAction = actSimple(gsCopy);
                     actionsAll[i] = simpleAction;
                 }
