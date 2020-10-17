@@ -13,7 +13,7 @@ import java.util.Random;
 public class OSLAPlayer extends Player {
     private Random random;
     private boolean rndOpponentModel;
-    public double epsilon = 1e-6;
+    public double epsilon = 1e-6; // Setting to 0 makes it like DoNothing, otherwise makes it place bombs frequently (more suicide)
     private StateHeuristic rootStateHeuristic;
 
     public OSLAPlayer(long seed, int id) {
