@@ -18,7 +18,7 @@ import static utils.Utils.*;
 public class OSLAPlayerR extends Player {
     private Random random;
     private boolean rndOpponentModel;
-    public double epsilon = 1e-6; // Setting to 0 makes it like DoNothing, otherwise makes it place bombs frequently
+    public double epsilon = 1e-8;
     private StateHeuristic rootStateHeuristic;
 
     private ArrayList<Vector2d> recentlyVisitedPositions;
@@ -29,17 +29,34 @@ public class OSLAPlayerR extends Player {
         reset(seed, id);
     }
 
+    /**
+     * Makes a copy of this player.
+     * @return a deep copy of this player.
+     */
+    @Override
+    public Player copy() {
+        OSLAPlayerR player = new OSLAPlayerR(seed,playerID);
+        player.recentlyVisitedPositions = new ArrayList<>();
+        recentlyVisitedPositions.forEach(e -> player.recentlyVisitedPositions.add(e.copy()));
+        player.recentlyVisitedLength = recentlyVisitedLength;
+        //player.prevDirection = prevDirection;
+        return player;
+    }
+
     @Override
     public void reset(long seed, int playerID) {
         super.reset(seed, playerID);
         random = new Random(seed);
+
+        this.recentlyVisitedPositions = new ArrayList<>();
+        this.recentlyVisitedLength = 6;
     }
 
     @Override
     public Types.ACTIONS act(GameState gs) {
 
         rootStateHeuristic = new CustomHeuristic(gs);
-        rndOpponentModel = true;
+        rndOpponentModel = false;
 
         ArrayList<Types.ACTIONS> actionsList = Types.ACTIONS.all();
         double maxQ = Double.NEGATIVE_INFINITY;
@@ -69,11 +86,6 @@ public class OSLAPlayerR extends Player {
     public int[] getMessage() {
         // default message
         return new int[Types.MESSAGE_LENGTH];
-    }
-
-    @Override
-    public Player copy() {
-        return new OSLAPlayerR(seed, playerID);
     }
 
     private void rollRnd(GameState gs, Types.ACTIONS act)
