@@ -32,13 +32,14 @@ public class Run {
         System.out.println("\t\t 4 RHEA 200 itereations, shift buffer, pop size 1, random init, length: 12");
         System.out.println("\t\t 5 MCTS 200 iterations, length: 12");
         System.out.println("\t\t 6 MCTSR 200 iterations, length: 12");
+        System.out.println("\t\t 7 OSLAR");
     }
 
     public static void main(String[] args) {
 
         //default
         if(args.length == 0)
-            args = new String[]{"0", "1", "1", "-1", "6", "3", "4", "5"};
+            args = new String[]{"0", "10", "20", "-1", "7", "2", "1", "3"};
 
         if(args.length != 8) {
             printHelp();
@@ -136,6 +137,10 @@ public class Run {
                         mctsParamsR.heuristic_method = mctsParamsR.CUSTOM_HEURISTIC;
                         p = new MCTSPlayerR(seed, playerID++, mctsParamsR);
                         playerStr[i-4] = "MCTSR";
+                        break;
+                    case 7:
+                        p = new OSLAPlayerR(seed, playerID++);
+                        playerStr[i-4] = "OSLAR";
                         break;
                     default:
                         System.out.println("WARNING: Invalid agent ID: " + agentType );
