@@ -156,7 +156,7 @@ public class SingleTreeNodeR
             {
                 actionsAll[i] = act;
             }else {
-                int actionIdx = m_rnd.nextInt(gs.nActions());
+                int actionIdx = m_rnd.nextInt(gs.nActions()); // This is where they randomly play
                 actionsAll[i] = Types.ACTIONS.all().get(actionIdx);
             }
         }
