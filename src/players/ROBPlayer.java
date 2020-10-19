@@ -19,8 +19,8 @@ public class ROBPlayer extends Player {
     private ArrayList<Vector2d> recentlyVisitedPositions;
     private int recentlyVisitedLength;
 
-    private boolean rndOpponentModel = true;
-    public double epsilon = 0;
+    private boolean rndOpponentModel = false;
+    public double epsilon = 0; //1e-8;
     private StateHeuristic rootStateHeuristic;
 
     /**
@@ -290,6 +290,196 @@ public class ROBPlayer extends Player {
 
         return bestAction;
 
+    }
+
+    // Like act but with no OSLA at the end. Used to simulate agent's actions
+    public Types.ACTIONS actSimple(GameState gs) {
+
+        // 1) Initialise the required information off GameState
+        Vector2d myPosition = gs.getPosition();
+
+        Types.TILETYPE[][] board = gs.getBoard();
+        int[][] bombBlastStrength = gs.getBombBlastStrength();
+        int[][] bombLife = gs.getBombLife();
+
+        int ammo = gs.getAmmo();
+        int blastStrength = gs.getBlastStrength();
+
+        ArrayList<Types.TILETYPE> enemiesObs = gs.getAliveEnemyIDs();
+
+        int boardSizeX = board.length;
+        int boardSizeY = board[0].length;
+
+        ArrayList<Bomb> bombs = new ArrayList<>();
+        ArrayList<GameObject> enemies = new ArrayList<>();
+
+        for (int x = 0; x < boardSizeX; x++) {
+            for (int y = 0; y < boardSizeY; y++) {
+
+                Types.TILETYPE type = board[y][x];
+
+                if(type == Types.TILETYPE.BOMB || bombBlastStrength[y][x] > 0){
+                    // Create bomb object
+                    Bomb bomb = new Bomb();
+                    bomb.setPosition(new Vector2d(x, y));
+                    bomb.setBlastStrength(bombBlastStrength[y][x]);
+                    bomb.setLife(bombLife[y][x]);
+                    bombs.add(bomb);
+                }
+                else if(Types.TILETYPE.getAgentTypes().contains(type) &&
+                        type.getKey() != gs.getPlayerId()){ // May be an enemy
+                    if(enemiesObs.contains(type)) { // Is enemy
+                        // Create enemy object
+                        GameObject enemy = new GameObject(type);
+                        enemy.setPosition(new Vector2d(x, y));
+                        enemies.add(enemy); // no copy needed
+                    }
+                }
+            }
+        }
+
+        // items: tile types with their coordinates
+        // dist: coordinates with their distance
+        // prev: shortest path with previous node and the distance to it
+
+        ROBPlayer.Container from_dijkstra = dijkstra(board, myPosition, bombs, enemies, 10);
+        HashMap<Types.TILETYPE, ArrayList<Vector2d>> items = from_dijkstra.items;
+        Iterator it;
+        HashMap<Vector2d, Integer> dist = from_dijkstra.dist;
+        HashMap<Vector2d, Vector2d> prev = from_dijkstra.prev;
+
+        // 2) Move if we are in an unsafe place.
+        HashMap<Types.DIRECTIONS, Integer> unsafeDirections = directionsInRangeOfBomb(myPosition, bombs, dist);
+
+        if(!unsafeDirections.isEmpty()){
+
+            ArrayList<Types.DIRECTIONS> directions = findSafeDirections(board, myPosition, unsafeDirections, bombs, enemies);
+
+            if(!directions.isEmpty()) {
+                return directionToAction(directions.get(random.nextInt(directions.size())));
+            }
+            else {
+                return Types.ACTIONS.ACTION_STOP;
+            }
+        }
+
+        // 3) Lay bomb if we are adjacent to an enemy.
+        if(isAdjacentEnemy(items, dist, enemies) && maybeBomb(ammo, blastStrength, items, dist, myPosition)){
+            return Types.ACTIONS.ACTION_BOMB;
+        }
+
+        //  4) Move towards an enemy if there is one in exactly three reachable spaces.
+        // check dist to nearest enemy
+        // enemies - list of ArrayList of game objects
+        for (GameObject en: enemies){
+            Iterator dist_it = dist.entrySet().iterator(); // <Vector2d, Integer>
+            while (dist_it.hasNext()){
+                Map.Entry<Vector2d, Integer> entry = (Map.Entry)dist_it.next();
+
+                if (entry.getKey().equals(en.getPosition()) && entry.getValue() == 3){
+                    // pick this direction
+                    Vector2d next_node = entry.getKey();
+                    while (!myPosition.equals(prev.get(next_node))){
+                        next_node = prev.get(next_node);
+                    }
+                    // return node, which had prev_node
+                    return directionToAction(getDirection(myPosition, next_node));
+
+                }
+            }
+
+        }
+
+        // 5) Move towards a good item if there is one within two reachable spaces.
+        // good items are the pickups
+        it = items.entrySet().iterator();
+        Vector2d previousNode = new Vector2d(-1, -1); // placeholder, these values are not actually used
+        int distance = Integer.MAX_VALUE;
+        while (it.hasNext()){
+            Map.Entry<Types.TILETYPE, ArrayList<Vector2d> > entry = (Map.Entry)it.next();
+            // check pickup entries on the board
+            if (Types.TILETYPE.getPowerUpTypes().contains(entry.getKey())){
+                // no need to store just get closest
+                for (Vector2d coords: entry.getValue()){
+                    if (dist.get(coords) < distance){
+                        distance = dist.get(coords);
+                        previousNode = coords;
+                    }
+                }
+            }
+        }
+        if (distance <= 2){
+            // iterate until we get to the immadiate next node
+            if (myPosition.equals(previousNode)){
+                return directionToAction(getDirection(myPosition, previousNode));
+            }
+            while (!myPosition.equals(prev.get(previousNode))){ ;
+                previousNode = prev.get(previousNode);
+            }
+            return directionToAction(getDirection(myPosition, previousNode));
+        }
+
+        // 6) Maybe lay a bomb if we are within a space of a wooden wall.
+        it = items.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Types.TILETYPE, ArrayList<Vector2d>> entry = (Map.Entry) it.next();
+            // check pickup entries on the board
+            if (entry.getKey().equals(Types.TILETYPE.WOOD) ) {
+                // check the distance from the wooden planks
+                for (Vector2d coords: entry.getValue()){
+                    if (dist.get(coords) == 1){
+                        if( maybeBomb(ammo, blastStrength, items, dist, myPosition)){
+                            return Types.ACTIONS.ACTION_BOMB;
+                        }
+                    }
+                }
+                // 7) Move towards a wooden wall if there is one within two reachable spaces and you have a bomb.
+                if (ammo < 1) continue;
+                for (Vector2d coords:entry.getValue()){
+                    // max 2 reachable space
+                    if (dist.get(coords) <= 2){
+                        previousNode = coords;
+                        while (!myPosition.equals(prev.get(previousNode))){
+                            previousNode = prev.get(previousNode);
+                        }
+                        Types.DIRECTIONS direction = getDirection(myPosition, previousNode);
+                        if (direction != null){
+                            ArrayList<Types.DIRECTIONS> dirArray = new ArrayList<>();
+                            dirArray.add(direction);
+                            dirArray = filterUnsafeDirections(myPosition, dirArray, bombs);
+
+                            if (dirArray.size() > 0){
+                                return directionToAction(dirArray.get(0));
+                            }
+                        }
+
+
+                    }
+                }
+            }
+        }
+
+        // 8) Choose a random but valid direction.
+        ArrayList<Types.DIRECTIONS> directions = new ArrayList<>();
+        directions.add(Types.DIRECTIONS.UP);
+        directions.add(Types.DIRECTIONS.DOWN);
+        directions.add(Types.DIRECTIONS.LEFT);
+        directions.add(Types.DIRECTIONS.RIGHT);
+        ArrayList<Types.DIRECTIONS> validDirections = filterInvalidDirections(board, myPosition, directions, enemies);
+        validDirections = filterUnsafeDirections(myPosition, validDirections, bombs );
+        validDirections = filterRecentlyVisited(validDirections, myPosition, this.recentlyVisitedPositions);
+
+        // 9) Add this position to the recently visited uninteresting positions so we don't return immediately.
+        recentlyVisitedPositions.add(myPosition);
+        if (recentlyVisitedPositions.size() > recentlyVisitedLength)
+            recentlyVisitedPositions.remove(0);
+
+        if (validDirections.size() > 0){
+            int actionIdx = random.nextInt(validDirections.size());
+            return directionToAction(validDirections.get(actionIdx));
+        }
+
+        return Types.ACTIONS.ACTION_STOP;
     }
 
     @Override
@@ -758,6 +948,9 @@ public class ROBPlayer extends Player {
         int nPlayers = 4;
         Types.ACTIONS[] actionsAll = new Types.ACTIONS[4];
 
+        GameState gsCopy = gs.copy();
+        GameObject[] agents = gsCopy.getAgents(); // gets all agents
+
         for(int i = 0; i < nPlayers; ++i)
         {
             if(i == getPlayerID() - Types.TILETYPE.AGENT0.getKey())
@@ -769,7 +962,20 @@ public class ROBPlayer extends Player {
                     actionsAll[i] = Types.ACTIONS.all().get(actionIdx);
                 }else
                 {
-                    actionsAll[i] = Types.ACTIONS.ACTION_STOP;
+                    // Changed from Do Nothing to something more advanced
+                    //actionsAll[i] = Types.ACTIONS.ACTION_STOP
+
+                    GameObject agent = agents[i];
+                    Vector2d position = agent.getPosition();
+
+                    // Unfortunately can't get kick, ammo or blast strength information so assumes randomly
+                    boolean canKick = random.nextBoolean();
+                    int ammo = random.nextInt(3) + 1; // range 1-3
+                    int blastStrength = random.nextInt(3) + 1; // range 1-3
+
+                    gsCopy.setAgent(i, position.x, position.y, canKick, ammo, blastStrength);
+                    Types.ACTIONS simpleAction = actSimple(gsCopy);
+                    actionsAll[i] = simpleAction;
                 }
             }
         }
