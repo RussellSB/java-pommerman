@@ -80,37 +80,49 @@ public class SingleTreeNodeR
 
             GameState state = rootState.copy();
             ElapsedCpuTimer elapsedTimerIteration = new ElapsedCpuTimer();
-            SingleTreeNodeR selected = treePolicy(state);
-            double delta = selected.rollOut(state);
-            backUp(selected, delta);
+            SingleTreeNodeR selected = treePolicy(state); // selection + expansion
+            double delta = selected.rollOut(state); // rollout
+            backUp(selected, delta); //backpropogation
 
-            //Stopping condition
+            //Stopping conditions
+
+            // If time budget, calculates the average time taken per iteration and checks remaining time
             if(params.stop_type == params.STOP_TIME) {
                 numIters++;
                 acumTimeTaken += (elapsedTimerIteration.elapsedMillis()) ;
                 avgTimeTaken  = acumTimeTaken/numIters;
                 remaining = elapsedTimer.remainingTimeMillis();
                 stop = remaining <= 2 * avgTimeTaken || remaining <= remainingLimit;
-            }else if(params.stop_type == params.STOP_ITERATIONS) {
+            }
+
+            // If iteration budget, keeps count of iterations and checks the remaining number
+            else if(params.stop_type == params.STOP_ITERATIONS) {
                 numIters++;
                 stop = numIters >= params.num_iterations;
-            }else if(params.stop_type == params.STOP_FMCALLS)
+            }
+
+            // If FM calls budget,
+            // keeps count of how many calls to the GameState.next() function were made, and checks the remaining
+            // number.
+            else if(params.stop_type == params.STOP_FMCALLS)
             {
                 fmCallsCount+=params.rollout_depth;
                 stop = (fmCallsCount + params.rollout_depth) > params.num_fmcalls;
             }
         }
-        //System.out.println(" ITERS " + numIters);
+        System.out.println(" ITERS " + numIters);
     }
 
     private SingleTreeNodeR treePolicy(GameState state) {
 
         SingleTreeNodeR cur = this;
 
+        // Selection stops when a node is found that does not have all children expanded,
+        // and a new one will be expanded there
         while (!state.isTerminal() && cur.m_depth < params.rollout_depth)
         {
             if (cur.notFullyExpanded()) {
-                return cur.expand(state);
+                return cur.expand(state); // expands with a random action
 
             } else {
                 cur = cur.uct(state);
@@ -121,6 +133,7 @@ public class SingleTreeNodeR
     }
 
 
+    // Expands the tree with a random action
     private SingleTreeNodeR expand(GameState state) {
 
         int bestAction = 0;
@@ -168,12 +181,12 @@ public class SingleTreeNodeR
     private SingleTreeNodeR uct(GameState state) {
         SingleTreeNodeR selected = null;
         double bestValue = -Double.MAX_VALUE;
-        for (SingleTreeNodeR child : this.children)
+        for (SingleTreeNodeR child : this.children) // Iterates through all children of the node, calculating each child's ucb1
         {
             double hvVal = child.totValue;
             double childValue =  hvVal / (child.nVisits + params.epsilon);
 
-            childValue = Utils.normalise(childValue, bounds[0], bounds[1]);
+            childValue = Utils.normalise(childValue, bounds[0], bounds[1]); // child's value is normalised between bounds
 
             double uctValue = childValue +
                     params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
@@ -182,7 +195,7 @@ public class SingleTreeNodeR
 
             // small sampleRandom numbers: break ties in unexpanded nodes
             if (uctValue > bestValue) {
-                selected = child;
+                selected = child; // child with highest ucb1 value is selected
                 bestValue = uctValue;
             }
         }
@@ -193,15 +206,17 @@ public class SingleTreeNodeR
         }
 
         //Roll the state:
-        roll(state, actions[selected.childIdx]);
+        roll(state, actions[selected.childIdx]); // state is rolled forward with the selected action
 
         return selected;
     }
 
+    // Models opponents with safe random actions, that wouldn't get them killed
     private double rollOut(GameState state)
     {
         int thisDepth = this.m_depth;
 
+        // Rollout ends when max depth is reached or the state is terminal
         while (!finishRollout(state,thisDepth)) {
             int action = safeRandomAction(state);
             roll(state, actions[action]);
@@ -251,6 +266,7 @@ public class SingleTreeNodeR
         return false;
     }
 
+    // Statistics of each node being updated after the state at the end of the rollout
     private void backUp(SingleTreeNodeR node, double result)
     {
         SingleTreeNodeR n = node;
@@ -269,6 +285,7 @@ public class SingleTreeNodeR
     }
 
 
+    //  Chooses the most visited action as the best action
     int mostVisitedAction() {
         int selected = -1;
         double bestValue = -Double.MAX_VALUE;
