@@ -245,12 +245,12 @@ public class SingleTreeNodeR
 
             if (x >= 0 && x < width && y >= 0 && y < height)
                 if(board[y][x] != Types.TILETYPE.FLAMES)
-                    return nAction;
+                    return nAction; // returns safe action
 
-            actionsToTry.remove(nAction);
+            actionsToTry.remove(nAction); // removes unsafe action
         }
 
-        //Uh oh...
+        //returns randomly when no safe actions are found
         return m_rnd.nextInt(num_actions);
     }
 
