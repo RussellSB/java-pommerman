@@ -41,20 +41,21 @@ public class Test {
         RHEAParams rheaParams = new RHEAParams();
         rheaParams.heurisic_type = Constants.CUSTOM_HEURISTIC;
 
-        //players.add(new MCTSPlayerR(seed, playerID++, new MCTSParamsR()));
+        players.add(new MCTSPlayerR(seed, playerID++, new MCTSParamsR()));
         //players.add(new MCTSPlayer(seed, playerID++, mctsParams));
 
 //        players.add(new SimplePlayer(seed, playerID++));
        // players.add(new RHEAPlayer(seed, playerID++, rheaParams));
-        players.add(new OSLAPlayerR(seed, playerID++));
-        players.add(new SimplePlayer(seed, playerID++));
-        players.add(new SimplePlayer(seed, playerID++));
-        players.add(new SimplePlayer(seed, playerID++));
+        //players.add(new OSLAPlayerR(seed, playerID++));
+        players.add(new ROBPlayer(seed, playerID++));
+        //players.add(new SimplePlayer(seed, playerID++));
+        //players.add(new SimplePlayer(seed, playerID++));
+        //players.add(new SimplePlayer(seed, playerID++));
         //players.add(new MCTSPlayer(seed, playerID++, new MCTSParams()));
         //players.add(new MCTSPlayer(seed, playerID++, new MCTSParams()));
-        //players.add(new MCTSPlayer(seed, playerID++, new MCTSParams()));
-        /*players.add(new RHEAPlayer(seed, playerID++, rheaParams));
+        players.add(new MCTSPlayer(seed, playerID++, new MCTSParams()));
         players.add(new RHEAPlayer(seed, playerID++, rheaParams));
+        /*players.add(new RHEAPlayer(seed, playerID++, rheaParams));
         players.add(new RHEAPlayer(seed, playerID++, rheaParams));
         players.add(new RHEAPlayer(seed, playerID++, rheaParams));*/
 

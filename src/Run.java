@@ -33,13 +33,14 @@ public class Run {
         System.out.println("\t\t 5 MCTS 200 iterations, length: 12");
         System.out.println("\t\t 6 MCTSR 200 iterations, length: 12");
         System.out.println("\t\t 7 OSLAR");
+        System.out.println("\t\t 8 ROBPlayer");
     }
 
     public static void main(String[] args) {
 
         //default
         if(args.length == 0)
-            args = new String[]{"0", "10", "20", "-1", "7", "2", "1", "3"};
+            args = new String[]{"0", "10", "20", "-1", "6", "7", "8", "4"};
 
         if(args.length != 8) {
             printHelp();
@@ -109,7 +110,7 @@ public class Run {
                         break;
                     case 4:
                         RHEAParams rheaParams = new RHEAParams();
-                        rheaParams.budget_type = Constants.ITERATION_BUDGET;
+                        rheaParams.budget_type = Constants.TIME_BUDGET;
                         rheaParams.iteration_budget = 200;
                         rheaParams.individual_length = 12;
                         rheaParams.heurisic_type = Constants.CUSTOM_HEURISTIC;
@@ -130,7 +131,7 @@ public class Run {
                         break;
                     case 6:
                         MCTSParamsR mctsParamsR = new MCTSParamsR();
-                        mctsParamsR.stop_type = mctsParamsR.STOP_ITERATIONS;
+                        mctsParamsR.stop_type = mctsParamsR.STOP_TIME;
                         mctsParamsR.num_iterations = 200;
                         mctsParamsR.rollout_depth = 12;
 
@@ -141,6 +142,10 @@ public class Run {
                     case 7:
                         p = new OSLAPlayerR(seed, playerID++);
                         playerStr[i-4] = "OSLAR";
+                        break;
+                    case 8:
+                        p = new ROBPlayer(seed, playerID++);
+                        playerStr[i-4] = "ROBPlayer";
                         break;
                     default:
                         System.out.println("WARNING: Invalid agent ID: " + agentType );
