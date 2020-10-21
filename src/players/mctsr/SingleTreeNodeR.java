@@ -92,6 +92,7 @@ public class SingleTreeNodeR
                 acumTimeTaken += (elapsedTimerIteration.elapsedMillis()) ;
                 avgTimeTaken  = acumTimeTaken/numIters;
                 remaining = elapsedTimer.remainingTimeMillis();
+                //System.out.println("TIME " + remaining);
                 stop = remaining <= 2 * avgTimeTaken || remaining <= remainingLimit;
             }
 
@@ -110,7 +111,7 @@ public class SingleTreeNodeR
                 stop = (fmCallsCount + params.rollout_depth) > params.num_fmcalls;
             }
         }
-        //System.out.println(" ITERS " + numIters);
+        System.out.println(" ITERS " + numIters );
     }
 
     private SingleTreeNodeR treePolicy(GameState state) {
