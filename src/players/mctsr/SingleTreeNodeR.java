@@ -182,15 +182,33 @@ public class SingleTreeNodeR
     private SingleTreeNodeR uct(GameState state) {
         SingleTreeNodeR selected = null;
         double bestValue = -Double.MAX_VALUE;
-        for (SingleTreeNodeR child : this.children) // Iterates through all children of the node, calculating each child's ucb1
+
+        double mean = 0;
+        for (SingleTreeNodeR child : this.children)
+        {
+            mean += (child.nVisits + params.epsilon) / (double) this.children.length;
+        }
+
+        double variance = 0;
+        for (SingleTreeNodeR child : this.children)
+        {
+            variance += Math.pow(((child.nVisits + params.epsilon) - mean), 2) / (double) this.children.length;
+        }
+
+        for (SingleTreeNodeR child : this.children) // Iterates through all children of the node, calculating each child's ucb1-tuned
         {
             double hvVal = child.totValue;
             double childValue =  hvVal / (child.nVisits + params.epsilon);
 
             childValue = Utils.normalise(childValue, bounds[0], bounds[1]); // child's value is normalised between bounds
 
+            double t = this.nVisits + 1;
+            double v = Math.min((double) 1/4,
+                    variance + Math.sqrt((2 * Math.log(t)) / (child.nVisits + params.epsilon)));
+
+            double K = params.K;
             double uctValue = childValue +
-                    params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
+                    K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon)) * v;
 
             uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
 

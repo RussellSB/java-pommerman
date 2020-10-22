@@ -40,7 +40,7 @@ public class Run {
 
         //default
         if(args.length == 0)
-            args = new String[]{"0", "10", "20", "-1", "6", "8", "5", "4"};
+            args = new String[]{"0", "5", "5", "-1", "6", "8", "5", "4"};
 
         if(args.length != 8) {
             printHelp();
