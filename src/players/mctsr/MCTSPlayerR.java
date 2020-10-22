@@ -13,7 +13,7 @@ import java.util.Random;
 public class MCTSPlayerR extends ParameterizedPlayer {
 
     /**
-     * Random generator.
+     * Random generator. TEST ONE
      */
     private Random m_rnd;
 
