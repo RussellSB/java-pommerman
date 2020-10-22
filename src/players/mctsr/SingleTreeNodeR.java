@@ -82,7 +82,7 @@ public class SingleTreeNodeR
             ElapsedCpuTimer elapsedTimerIteration = new ElapsedCpuTimer();
             SingleTreeNodeR selected = treePolicy(state); // selection + expansion
             double delta = selected.rollOut(state); // rollout
-            backUp(selected, delta); //backpropogation
+            backUp(selected, delta); //backpropagation
 
             //Stopping conditions
 
@@ -111,7 +111,7 @@ public class SingleTreeNodeR
                 stop = (fmCallsCount + params.rollout_depth) > params.num_fmcalls;
             }
         }
-        System.out.println(" ITERS " + numIters );
+        //System.out.println(" ITERS " + numIters );
     }
 
     private SingleTreeNodeR treePolicy(GameState state) {

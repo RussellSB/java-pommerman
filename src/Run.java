@@ -29,9 +29,9 @@ public class Run {
         System.out.println("\t\t 1 Random");
         System.out.println("\t\t 2 OSLA");
         System.out.println("\t\t 3 SimplePlayer");
-        System.out.println("\t\t 4 RHEA 200 itereations, shift buffer, pop size 1, random init, length: 12");
-        System.out.println("\t\t 5 MCTS 200 iterations, length: 12");
-        System.out.println("\t\t 6 MCTSR 200 iterations, length: 12");
+        System.out.println("\t\t 4 RHEA 100 ms, shift buffer, pop size 1, random init, length: 12");
+        System.out.println("\t\t 5 MCTS 100 ms, 12 roll out");
+        System.out.println("\t\t 6 MCTSR 100 ms, 12 roll out");
         System.out.println("\t\t 7 OSLAR");
         System.out.println("\t\t 8 ROBPlayer");
     }
@@ -40,7 +40,7 @@ public class Run {
 
         //default
         if(args.length == 0)
-            args = new String[]{"0", "10", "20", "-1", "6", "7", "8", "4"};
+            args = new String[]{"0", "10", "20", "-1", "6", "8", "5", "4"};
 
         if(args.length != 8) {
             printHelp();
@@ -111,7 +111,6 @@ public class Run {
                     case 4:
                         RHEAParams rheaParams = new RHEAParams();
                         rheaParams.budget_type = Constants.TIME_BUDGET;
-                        rheaParams.iteration_budget = 200;
                         rheaParams.individual_length = 12;
                         rheaParams.heurisic_type = Constants.CUSTOM_HEURISTIC;
                         rheaParams.mutation_rate = 0.5;
@@ -121,7 +120,7 @@ public class Run {
                         break;
                     case 5:
                         MCTSParams mctsParams = new MCTSParams();
-                        mctsParams.stop_type = mctsParams.STOP_ITERATIONS;
+                        mctsParams.stop_type = mctsParams.STOP_TIME;
                         mctsParams.num_iterations = 200;
                         mctsParams.rollout_depth = 12;
 
@@ -132,7 +131,6 @@ public class Run {
                     case 6:
                         MCTSParamsR mctsParamsR = new MCTSParamsR();
                         mctsParamsR.stop_type = mctsParamsR.STOP_TIME;
-                        mctsParamsR.num_iterations = 200;
                         mctsParamsR.rollout_depth = 12;
 
                         mctsParamsR.heuristic_method = mctsParamsR.CUSTOM_HEURISTIC;
