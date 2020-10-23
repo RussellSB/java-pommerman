@@ -197,18 +197,12 @@ public class SingleTreeNodeR
 
         for (SingleTreeNodeR child : this.children) // Iterates through all children of the node, calculating each child's ucb1-tuned
         {
-            double hvVal = child.totValue;
-            double childValue =  hvVal / (child.nVisits + params.epsilon);
 
-            childValue = Utils.normalise(childValue, bounds[0], bounds[1]); // child's value is normalised between bounds
-
-            double t = this.nVisits + 1;
-            double v = Math.min((double) 1/4,
-                    variance + Math.sqrt((2 * Math.log(t)) / (child.nVisits + params.epsilon)));
+            double stdev = Math.sqrt(variance);
 
             double K = params.K;
-            double uctValue = childValue +
-                    K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon)) * v;
+            double uctValue = mean +
+                    K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
 
             uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
 
