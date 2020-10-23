@@ -202,7 +202,7 @@ public class SingleTreeNodeR
 
             double K = params.K;
             double uctValue = mean +
-                    K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
+                    K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon)) * stdev;
 
             uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
 
