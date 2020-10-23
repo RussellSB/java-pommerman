@@ -159,7 +159,7 @@ private SingleTreeNodeR uct(GameState state) {
         roll(stateChild, childAction);
 
         double uctValue = (childValue) +
-                (params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon))) + (rootStateHeuris-tic.evaluateState(stateChild) / (1 + child.nVisits)); //param.K = explora-tion constant //change state for heuristic with child.rootState
+                (params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon))) + (rootStateHeuristic.evaluateState(stateChild) / (1 + child.nVisits)); //param.K = explora-tion constant //change state for heuristic with child.rootState
 
         uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
 
