@@ -140,3 +140,43 @@ private SingleTreeNodeR uct(GameState state) {
 
         return selected;
     }
+
+// =========== Progressive Bias ====================================================
+
+private SingleTreeNodeR uct(GameState state) {
+    SingleTreeNodeR selected = null;
+    double bestValue = -Double.MAX_VALUE;
+    for (SingleTreeNodeR child : this.children) // Iterates through all children of the node, calculating each child's ucb1
+    {
+        double hvVal = child.totValue;
+        double childValue =  hvVal / (child.nVisits + params.epsilon);
+
+        childValue = Utils.normalise(childValue, bounds[0], bounds[1]); // child's value is normalised between bounds
+
+        // Simulating child state
+        GameState stateChild = state.copy();
+        Types.ACTIONS childAction = actions[child.childIdx];
+        roll(stateChild, childAction);
+
+        double uctValue = (childValue) +
+                (params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon))) + (rootStateHeuris-tic.evaluateState(stateChild) / (1 + child.nVisits)); //param.K = explora-tion constant //change state for heuristic with child.rootState
+
+        uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
+
+        // small sampleRandom numbers: break ties in unexpanded nodes
+        if (uctValue > bestValue) {
+            selected = child; // child with highest ucb1 value is selected
+            bestValue = uctValue;
+        }
+    }
+    if (selected == null)
+    {
+        throw new RuntimeException("Warning! returning null: " + bestValue + " : " + this.children.length + " " +
+                + bounds[0] + " " + bounds[1]);
+    }
+
+    //Roll the state:
+    roll(state, actions[selected.childIdx]); // state is rolled forward with the selected action
+
+    return selected;
+}
