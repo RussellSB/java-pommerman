@@ -4,6 +4,7 @@ import core.GameState;
 import players.heuristics.AdvancedHeuristic;
 import players.heuristics.CustomHeuristic;
 import players.heuristics.StateHeuristic;
+import players.mcts.SingleTreeNode;
 import players.mctsr.MCTSParamsR;
 import utils.ElapsedCpuTimer;
 import utils.Types;
@@ -182,29 +183,21 @@ public class SingleTreeNodeR
     private SingleTreeNodeR uct(GameState state) {
         SingleTreeNodeR selected = null;
         double bestValue = -Double.MAX_VALUE;
-
-        double mean = 0;
-        for (SingleTreeNodeR child : this.children)
+        for (SingleTreeNodeR child : this.children) // Iterates through all children of the node, calculating each child's ucb1
         {
-            mean += (child.nVisits + params.epsilon) / (double) this.children.length;
-        }
+            double hvVal = child.totValue;
+            double childValue =  hvVal / (child.nVisits + params.epsilon);
 
-        double variance = 0;
-        for (SingleTreeNodeR child : this.children)
-        {
-            variance += Math.pow(((child.nVisits + params.epsilon) - mean), 2) / (double) this.children.length;
-        }
+            childValue = Utils.normalise(childValue, bounds[0], bounds[1]); // child's value is normalised between bounds
 
-        for (SingleTreeNodeR child : this.children) // Iterates through all children of the node, calculating each child's ucb1-tuned
-        {
-
-            double stdev = Math.sqrt(variance);
-
-            double K = params.K;
-            double uctValue = mean +
-                    K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon)) * stdev;
+            double uctValue = childValue +
+                    params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
 
             uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
+
+            // Decaying rewards
+            double gamma = 0.95;
+            uctValue = uctValue * Math.pow(gamma, this.m_depth);
 
             // small sampleRandom numbers: break ties in unexpanded nodes
             if (uctValue > bestValue) {

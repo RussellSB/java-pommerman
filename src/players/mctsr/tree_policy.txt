@@ -141,6 +141,8 @@ private SingleTreeNodeR uct(GameState state) {
         return selected;
     }
 
+
+
 // =========== Progressive Bias ====================================================
 
 private SingleTreeNodeR uct(GameState state) {
@@ -179,4 +181,43 @@ private SingleTreeNodeR uct(GameState state) {
     roll(state, actions[selected.childIdx]); // state is rolled forward with the selected action
 
     return selected;
-}
+
+
+    // ========= Decaying Rewards =================================================
+
+    private SingleTreeNodeR uct(GameState state) {
+            SingleTreeNodeR selected = null;
+            double bestValue = -Double.MAX_VALUE;
+            for (SingleTreeNodeR child : this.children) // Iterates through all children of the node, calculating each child's ucb1
+            {
+                double hvVal = child.totValue;
+                double childValue =  hvVal / (child.nVisits + params.epsilon);
+
+                childValue = Utils.normalise(childValue, bounds[0], bounds[1]); // child's value is normalised between bounds
+
+                double uctValue = childValue +
+                        params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
+
+                double gamma = 0.95;
+                uctValue = uctValue * Math.pow(gamma, this.m_depth); // placing it before noise, cause noise seems to help with win rate
+
+                uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
+
+                // small sampleRandom numbers: break ties in unexpanded nodes
+                if (uctValue > bestValue) {
+                    selected = child; // child with highest ucb1 value is selected
+                    bestValue = uctValue;
+                }
+            }
+            if (selected == null)
+            {
+                throw new RuntimeException("Warning! returning null: " + bestValue + " : " + this.children.length + " " +
+                        + bounds[0] + " " + bounds[1]);
+            }
+
+            //Roll the state:
+            roll(state, actions[selected.childIdx]); // state is rolled forward with the selected action
+
+            return selected;
+        }
+    }
