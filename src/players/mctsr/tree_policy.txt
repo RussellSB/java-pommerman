@@ -221,3 +221,53 @@ private SingleTreeNodeR uct(GameState state) {
             return selected;
         }
     }
+
+    // ========= RAVE Rewards =================================================
+
+    private SingleTreeNodeRAVE uct(GameState state) {
+        SingleTreeNodeRAVE selected = null;
+        double bestValue = -Double.MAX_VALUE;
+
+        for (SingleTreeNodeRAVE child : this.children) // Iterates through all children of the node, calculating each child's ucb1
+        {
+            if (child.nVisits == 0 && m_rnd.nextDouble() <= egreedyEpsilon) {
+                selected = child;
+                bestValue = Double.MAX_VALUE;
+            } else {
+
+                double hvVal = child.totValue;
+                double childValue =  hvVal / (child.nVisits + params.epsilon);
+
+                childValue = Utils.normalise(childValue, bounds[0], bounds[1]);
+
+                double alpha = Math.max(0.0, (RAVE_CONSTANT - child.nVisits) / RAVE_CONSTANT);
+
+                double QRAVE =  (1 - alpha) * childValue +
+                        alpha * (child.qRave / (child.nRave + params.epsilon));
+
+                double uctValue = QRAVE +
+                        params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
+
+
+                uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
+
+                // small sampleRandom numbers: break ties in unexpanded nodes
+                if (uctValue > bestValue) {
+                    selected = child;
+                    bestValue = uctValue;
+                }
+            }
+        }
+
+        if (selected == null)
+        {
+            throw new RuntimeException("Warning! returning null: " + bestValue + " : " + this.children.length + " " +
+                    + bounds[0] + " " + bounds[1]);
+        }
+        //Roll the state:
+        roll(state, actions[selected.childIdx]); // state is rolled forward with the selected action
+
+        return selected;
+    }
+
+

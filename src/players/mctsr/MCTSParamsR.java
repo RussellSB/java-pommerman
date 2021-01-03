@@ -24,7 +24,7 @@ public class MCTSParamsR implements ParameterSet {
     public double epsilon = 1e-6;
 
     // Parameters
-    public double K = Math.sqrt(2);
+    public double K = 3;
     public int rollout_depth = 8;//10;
     public int heuristic_method = CUSTOM_HEURISTIC;
 
