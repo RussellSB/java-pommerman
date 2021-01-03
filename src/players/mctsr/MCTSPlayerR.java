@@ -70,7 +70,7 @@ public class MCTSPlayerR extends ParameterizedPlayer {
         int num_actions = actions.length;
 
         // Root of the tree
-        SingleTreeNodeR m_root = new SingleTreeNodeR(params, m_rnd, num_actions, actions);
+        SingleTreeNodeRAVE m_root = new SingleTreeNodeRAVE(params, m_rnd, num_actions, actions);
         m_root.setRootGameState(gs);
 
         //Determine the action using MCTS...
