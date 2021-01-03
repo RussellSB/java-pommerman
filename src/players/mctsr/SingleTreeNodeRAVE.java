@@ -188,7 +188,7 @@ public class SingleTreeNodeRAVE
 
         for (SingleTreeNodeRAVE child : this.children) // Iterates through all children of the node, calculating each child's ucb1
         {
-            if (child.nVisits == 0) {
+            if (child.nVisits == 0 && m_rnd.nextDouble() <= egreedyEpsilon) {
                 selected = child;
                 bestValue = Double.MAX_VALUE;
             } else {
